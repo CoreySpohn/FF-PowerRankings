@@ -286,10 +286,55 @@ df['Playoff Seed'] = seedList
 # Semi-final winners: Play for championship
 # QF losers play the last 2 weeks, the person with more total points after 2 weeks gets 5th
 # SF losers play the last week, person with more points gets 3rd
+# Consolation bracket:
+# Whichever team at the end of the 3 weeks has the fewest points gets last
 playoffWeeks = list(range(playoffStartWeek, lastWeek+1))
 playoffdf = df.loc[df['Week'].isin(playoffWeeks)]
 
-
+places = []
+for week in range(playoffStartWeek, lastWeek+1):
+    # Check each owner for every week
+    for owner in teamIDs:
+        seed = int(df.loc[df['Week'] == playoffStartWeek].loc[df['Team Owner'] == owner]['Playoff Seed'])
+        if week == playoffStartWeek:
+            # Round 1
+            if seed in [1, 2]:
+                dfIndex = df.loc[df['Week'] == week].loc[df['Team Owner'] == owner].index.values # Get the row to add the value to
+                df.at[dfIndex, 'Playoff Matchup'] = 'Bye'
+                dfIndex2 = df.loc[df['Week'] == week + 1].loc[df['Team Owner'] == owner].index.values # Get the person's next week matchup
+                df.at[dfIndex2, 'Playoff Matchup'] = 'Semi Final ' + str(seed) # Determine which semi final they play in
+            if seed in [3, 4, 5, 6]:
+                # Winners bracket round 1 for those not on bye
+                dfIndex = df.loc[df['Week'] == week].loc[df['Team Owner'] == owner].index.values
+                seedScore = float(df.loc[df['Week'] == week].loc[df['Team Owner'] == owner]['Points For'])
+                # Determine opponnent
+                if seed in [3,6]:
+                    opponent = [3,6]
+                    opponent.remove(seed)
+                    opponent = opponent[0]
+                    opponentScore = float(df.loc[df['Week'] == week].loc[df['Playoff Seed'] == opponent]['Points For'])
+                    if seedScore > opponentScore:
+                        dfIndex = df.loc[df['Week'] == week+1].loc[df['Team Owner'] == owner].index.values
+                        df.at[dfIndex, 'Playoff Matchup'] = 'Semi Final 2'
+                    else:
+                        dfIndex = df.loc[df['Week'] == week+1].loc[df['Team Owner'] == owner].index.values
+                        df.at[dfIndex, 'Playoff Matchup'] = '5th/6th Game'
+                elif seed in [4, 5]:
+                    opponent = [4,5]
+                    opponent.remove(seed)
+                    opponent = opponent[0]
+                    opponentScore = float(df.loc[df['Week'] == week].loc[df['Playoff Seed'] == opponent]['Points For'])
+                    if seedScore > opponentScore:
+                        dfIndex = df.loc[df['Week'] == week+1].loc[df['Team Owner'] == owner].index.values
+                        df.at[dfIndex, 'Playoff Matchup'] = 'Semi Final 1'
+                    else:
+                        dfIndex = df.loc[df['Week'] == week+1].loc[df['Team Owner'] == owner].index.values
+                        df.at[dfIndex, 'Playoff Matchup'] = '5th/6th Game'
+        seedMatch = df.loc[df['Week'] == week].loc[df['Team Owner'] == owner]['Playoff Matchup'].values[0]
+        matchdf = df.loc[df['Playoff Matchup'] == seedMatch]
+        
+        
+        
 ################
 ## Some stats ##
 ################
