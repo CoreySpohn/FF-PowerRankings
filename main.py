@@ -6,22 +6,31 @@ import pandas as pd
 import numpy as np
 import seaborn as sns
 import os
+from sleeper_wrapper import League
 scriptDir = os.path.dirname(__file__)
 
 
-league = 'LOF'
-year = 2018
+league = 'League of Futons'
+year = 2019
 if league == 'MAE':
     # Mechanical Aerospace Engineering
-    leagueID = 1514235
+    league_ID = 1514235
+    league_platform = 'Sleeper'
 
-elif league == 'LOF':
+elif league == 'League of Futons':
     # League of Futons
-    leagueID = 707792
+    league_ID = 707792
+    league_platform = 'ESPN'
 
 elif league == 'HRN':
     # Herndon League
-    leagueID = 1395395
+    league_ID = 1395395
+    league_platform = 'ESPN'
+    
+elif league == 'Dynasty':
+    league_ID = 10
+    league_platform = 'Sleeper'
+    
     
 teamIDs = list(pd.read_csv(league+str(year)+'Owners.csv',header=None).values.tolist()[0])
 firstWeek = 1
@@ -43,7 +52,7 @@ ROSWeight = 5
 scores = {}
 for week in weeks:
     r = requests.get('http://games.espn.com/ffl/api/v2/scoreboard', 
-                     params={'leagueId': leagueID, 'seasonId': year, 'matchupPeriodId': week})
+                     params={'league_ID': league_ID, 'seasonId': year, 'matchupPeriodId': week})
     scores[week] = r.json()
 
 ###############################################################################
