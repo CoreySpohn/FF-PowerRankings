@@ -12,7 +12,7 @@ from sleeper_wrapper import Stats
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-
+import six
 #####
 # Get the player data
 #####
@@ -142,7 +142,7 @@ sleeper_points_arr = np.zeros((len(owner_roster_list), 17))
 all_players = players.get_all_players()
 # print('test')
 weekly_matchup_list = np.array([])
-weeks = 2
+weeks = 16
 for week in range(weeks):
     weekly_matchup = league.get_matchups(week)
     week_stats = stats.get_week_stats('regular', 2019, week)
@@ -273,12 +273,50 @@ points_df = pd.DataFrame(points_arr, index = owners_sorted)
 potential_points_df = pd.DataFrame(potential_points_arr, index = owners_sorted)
 summed_potential_points = pd.DataFrame(potential_points_df.sum(axis=1)).sort_values(by=0, ascending = False)
 
+diff_arr = (sleeper_points_arr-points_arr).round(3)
+
 ##########################
 # for week in range(weeks):
 #     # i represents the current team
 #     for i in range(len(matchup_arr)):
         
 
+def render_mpl_table(data, col_width=3.0, row_height=0.625, font_size=14,
+                     header_color='#40466e', row_colors=['#f1f1f2', 'w'], edge_color='w',
+                     bbox=[0, 0, 1, 1], header_columns=0,
+                     ax=None, **kwargs):
+    if ax is None:
+        size = (np.array(data.shape[::-1]) + np.array([0, 1])) * np.array([col_width, row_height])
+        fig, ax = plt.subplots(figsize=size)
+        ax.axis('off')
+    
+    mpl_table = ax.table(cellText=data.values, bbox=bbox, colLabels=data.columns)
+    
+    mpl_table.auto_set_font_size(False)
+    mpl_table.set_fontsize(font_size)
+    for k, cell in six.iteritems(mpl_table._cells):
+        
+        cell.set_edgecolor(edge_color)
+        cell_value = data.iloc[(k[0]-1, k[1])]
+        
+        
+            
+        if k[0] == 0 or k[1] < header_columns:
+            cell.set_text_props(weight='bold', color='w')
+            cell.set_facecolor(header_color)
+        else:
+            cell.set_facecolor(row_colors[k[0]%len(row_colors) ])
+            
+        if type(cell_value) == float and not k[0] == 0:
+            if round(cell_value,2) > 0:
+                cell.set_facecolor('#90ee90')
+            elif round(cell_value,2) < 0:
+                cell.set_facecolor('#ffcccb')
+    return ax
 
+df = pd.DataFrame(diff_arr, index=owners_sorted, columns = np.linspace(1, 16, 17, dtype=int))
+df = df.reset_index()
+table_plot = render_mpl_table(df)
+table_plot.get_figure().savefig('Pretty_plot.png')
 
 
